@@ -1,0 +1,40 @@
+﻿- id: lost-reservation
+  label: "Player lost spawnpoint reservation"
+  tags: [spawn, reservation, player]
+  template: "[Notice] <Spawn Flow> CSCPlayerPUSpawningComponent::UnregisterFromExternalSystems: Player '{player}' [{player_id}] lost reservation for spawnpoint {spawn_name} [{spawn_id}] at location {location}"
+
+- id: physics-stats
+  label: "Physics instance stats block"
+  tags: [physics, stats]
+  starts-with: "PHYSICS INSTANCE STATS BEGIN"
+  ends-with: "PHYSICS INSTANCE STATS END"
+
+- id: cpu-particle-limit
+  label: "CPU particle limit reached"
+  tags: [renderer, particle, error]
+  starts-with: "[Error] <CPU Particle Limit reached> Reached particle limit '{particle_count}' which exceeds the limit of '{particle_limit}'. Will reject the addition of any new particles"
+  ends-with: "Effect: '{filename}'"
+
+- id: player-suffocating-started
+  label: "Player started suffocating"
+  tags: [player, atmosphere, suffocation]
+  starts-with: "[Notice] <[STAMINA] Player started suffocating> Player[{player}] Details:"
+  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+
+- id: player-suffocating-stopped
+  label: "Player stopped suffocating"
+  tags: [player, atmosphere, suffocation]
+  starts-with: "[Notice] <[STAMINA] Player stopped suffocating> Player[{player}] Details:"
+  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+
+- id: player-depressurization-started
+  label: "Player started depressurization"
+  tags: [player, atmosphere, depressurization]
+  starts-with: "[Notice] <[STAMINA] Player started depressurization> Player[{player}] Details:"
+  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+
+- id: player-depressurization-stopped
+  label: "Player stopped depressurization"
+  tags: [player, atmosphere, depressurization]
+  starts-with: "[Notice] <[STAMINA] Player stopped depressurization> Player[{player}] Details:"
+  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
