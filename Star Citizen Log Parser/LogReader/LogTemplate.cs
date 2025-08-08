@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
-using YamlDotNet.Serialization;
 
 namespace Star_Citizen_Log_Parser.LogReader
 {
@@ -22,25 +21,12 @@ namespace Star_Citizen_Log_Parser.LogReader
         // Single-line format
         public string? Template { get; set; }
 
-        // Multi-line format
-        [YamlMember(Alias = "starts-with", ApplyNamingConventions = false)]
-        public string? StartsWith { get; set; }
-
-        [YamlMember(Alias = "ends-with", ApplyNamingConventions = false)]
-        public string? EndsWith { get; set; }
-
         // Internal parser state
         private Regex? pattern;                  // Regex compiled from Template
-        private string? simplePattern;           // Leading literal text from Template
         private string? simpleStartsWith;
         private string? simpleEndsWith;
         private List<string> tokens = [];        // Ordered token names in regex capture groups
-
-        /// <summary>
-        /// Whether this template describes a multiline log block.
-        /// Automatically derived from StartsWith/EndsWith.
-        /// </summary>
-        public bool IsMultiline => StartsWith != null && EndsWith != null;
+        public bool IsMultiline => Template?.Trim().Contains('\n') == true;
 
         /// <summary>
         /// Initialize this log template: validate fields, prepare regex and token list if needed.
@@ -52,42 +38,19 @@ namespace Star_Citizen_Log_Parser.LogReader
             if (Id == null)
                 throw new InvalidDataException("LogTemplate is missing 'id'");
 
-            bool hasSingle = Template != null;
-            bool hasMulti = StartsWith != null || EndsWith != null;
+            if (Template == null)
+                throw new InvalidDataException($"LogTemplate '{Id}' is missing both 'template'");
 
-            if (!hasSingle && !hasMulti)
-                throw new InvalidDataException($"LogTemplate '{Id}' is missing both 'template' and 'starts-with'");
+            var (regex, tokens) = CompileTemplate(Template.Trim());
+            pattern = regex;
+            this.tokens = tokens;
 
-            if (hasSingle && hasMulti)
-                throw new InvalidDataException($"LogTemplate '{Id}' cannot define both 'template' and 'starts-with'/'ends-with'");
-
-            if (StartsWith != null && EndsWith == null)
-                throw new InvalidDataException($"LogTemplate '{Id}' defines 'starts-with' but is missing 'ends-with'");
-
-            if (EndsWith != null && StartsWith == null)
-                throw new InvalidDataException($"LogTemplate '{Id}' defines 'ends-with' but is missing 'starts-with'");
-
-            if (Template != null)
+            // Infer start/end from template lines
+            var lines = Template.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
+            simpleStartsWith = lines.First().Split('{')[0];
+            if (lines.Length >= 2)
             {
-                Template = Template.Trim();
-
-                var (regex, tokens) = CompileTemplate(Template);
-                pattern = regex;
-                this.tokens = tokens;
-
-                // Save the leading literal (before first token) for fast pre-match
-                simplePattern = Template.Split('{')[0];
-            }
-
-            if (StartsWith != null)
-            {
-                StartsWith = StartsWith.Trim();
-                simpleStartsWith = StartsWith.Split('{')[0];
-            }
-            if (EndsWith != null)
-            {
-                EndsWith = EndsWith.Trim();
-                simpleEndsWith = EndsWith.Split('{')[0];
+                simpleEndsWith = lines.Last().Split('{')[0];
             }
         }
 
@@ -97,30 +60,23 @@ namespace Star_Citizen_Log_Parser.LogReader
         /// </summary>
         public bool PreMatch(string line)
         {
-            if (simplePattern != null && line.StartsWith(simplePattern, StringComparison.OrdinalIgnoreCase))
+            if (MatchesStart(line))
                 return true;
 
-            if (StartsWith != null && line.StartsWith(simpleStartsWith, StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            if (EndsWith != null && line.Contains(simpleEndsWith, StringComparison.OrdinalIgnoreCase))
+            if (MatchesEnd(line))
                 return true;
 
             return false;
         }
 
-        /// <summary>
-        /// Attempts to match a log line to this template and extract its fields.
-        /// Only works for single-line templates.
-        /// </summary>
-        public bool TryMatch(string line, out Dictionary<string, string>? values)
+        public bool TryMatch(string joinedLines, out Dictionary<string, string>? values)
         {
             values = null;
 
-            if (pattern == null || IsMultiline)
+            if (pattern == null)
                 return false;
 
-            var match = pattern.Match(line);
+            var match = pattern.Match(joinedLines);
             if (!match.Success)
                 return false;
 
@@ -128,43 +84,33 @@ namespace Star_Citizen_Log_Parser.LogReader
             return true;
         }
 
-
-        /// <summary>
-        /// Returns true if this line matches the configured block start for a multiline template.
-        /// </summary>
         public bool MatchesStart(string line)
         {
-            return StartsWith != null && line.StartsWith(simpleStartsWith, StringComparison.OrdinalIgnoreCase);
+            return simpleStartsWith != null && line.StartsWith(simpleStartsWith, StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>
-        /// Returns true if this line matches the configured block end for a multiline template.
-        /// </summary>
         public bool MatchesEnd(string line)
         {
-            return EndsWith != null && line.Contains(simpleEndsWith, StringComparison.OrdinalIgnoreCase);
+            return simpleEndsWith != null && line.Contains(simpleEndsWith, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Compiles a log template string into a regex with named capture groups.
         /// Returns both the regex and the ordered list of token names.
         /// </summary>
-        private static (Regex regex, List<string> tokens) CompileTemplate(string template)
+        public static (Regex regex, List<string> tokens) CompileTemplate(string template)
         {
             var tokens = new List<string>();
             var sb = new StringBuilder();
-            sb.Append("^");
-
             int pos = 0;
             var tokenRegex = new Regex(@"\{(\w+)\}");
 
             foreach (Match match in tokenRegex.Matches(template))
             {
-                // Literal part before the token
+                // Append the literal text before the token, but escape only regex-sensitive characters (not spaces)
                 string literal = template.Substring(pos, match.Index - pos);
-                sb.Append(Regex.Escape(literal));
+                sb.Append(SafeEscape(literal));
 
-                // Determine context
                 string tokenName = match.Groups[1].Value;
                 tokens.Add(tokenName);
 
@@ -177,13 +123,16 @@ namespace Star_Citizen_Log_Parser.LogReader
                 pos = match.Index + match.Length;
             }
 
-            // Remaining text
             if (pos < template.Length)
-                sb.Append(Regex.Escape(template.Substring(pos)));
+                sb.Append(SafeEscape(template.Substring(pos)));
 
-            sb.Append("$");
+            return (new Regex(sb.ToString(), RegexOptions.Compiled | RegexOptions.Multiline), tokens);
+        }
 
-            return (new Regex(sb.ToString(), RegexOptions.Compiled), tokens);
+        private static string SafeEscape(string input)
+        {
+            // Escape all special characters, but leave literal spaces unescaped
+            return Regex.Escape(input).Replace(@"\ ", " ");
         }
 
         /// <summary>
@@ -192,12 +141,11 @@ namespace Star_Citizen_Log_Parser.LogReader
         /// </summary>
         private static string InferPattern(char before, char after)
         {
-            return (before, after) switch
-            {
-                ('\'', '\'') => @"[^']+",      // Inside single quotes
-                ('[', ']') => @"[^\]]+",     // Inside square brackets
-                _ => @".+?"         // Fallback non-greedy match
-            };
+            if (before == '"' && after == '"') return @"[^""]+";
+            if (before == '\'' && after == '\'') return @"[^']+";
+            if (before == '[' && after == ']') return @"[^\]]+";
+            if (before == '{' && after == '}') return @"[^}]+";
+            return @".*?"; // Non-greedy fallback
         }
     }
 }

@@ -4,37 +4,583 @@
   template: "[Notice] <Spawn Flow> CSCPlayerPUSpawningComponent::UnregisterFromExternalSystems: Player '{player}' [{player_id}] lost reservation for spawnpoint {spawn_name} [{spawn_id}] at location {location}"
 
 - id: physics-stats
-  label: "Physics instance stats block"
-  tags: [physics, stats]
-  starts-with: "PHYSICS INSTANCE STATS BEGIN"
-  ends-with: "PHYSICS INSTANCE STATS END"
+  label: Physics Instance Stats Block
+  tags: [physics, stats, block]
+  template: |
+    PHYSICS INSTANCE STATS BEGIN {count}
+    {lines}
+    PHYSICS INSTANCE STATS END
 
-- id: cpu-particle-limit
-  label: "CPU particle limit reached"
-  tags: [renderer, particle, error]
-  starts-with: "[Error] <CPU Particle Limit reached> Reached particle limit '{particle_count}' which exceeds the limit of '{particle_limit}'. Will reject the addition of any new particles"
-  ends-with: "Effect: '{filename}'"
+- id: atc-tube-state
+  label: ATC Tube State Change
+  tags: [atc, tube, state, change]
+  template: "[Notice] <CSCItemDockingTube::OnSetTubeState> {atc_data_manager_name} [{atc_data_manager_id}] - [PROC]{atc_tube_state_name} [{atc_tube_state_id}] - OnSetTubeState to {atc_tube_state_current}, last tube state is {atc_tube_state_last}"
+  
+- id: grpc-reuse-channel
+  label: gRPC Channel Reuse
+  tags: [grpc, reuse, channel, analytics, network]
+  template: "[Notice] <ReuseChannel> Reusing channel for '{service}' to endpoint {endpoint} (transport security: {security})"
 
-- id: player-suffocating-started
-  label: "Player started suffocating"
-  tags: [player, atmosphere, suffocation]
-  starts-with: "[Notice] <[STAMINA] Player started suffocating> Player[{player}] Details:"
-  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+- id: transit-finish
+  label: Transit Carriage Finished Transit
+  tags: [transit, carriage, zone, position]
+  template: "[Notice] <TransitCarriageFinishTransit> [TRANSITDEBUG] [TRANSIT CARRIAGE] [ECarriageGeneral] : Carriage {carriage_number} (Id: {carriage_id}) for manager {manager_name} finished transit in zone {zone} at position x: {x}, y: {y}, z: {z}"
 
-- id: player-suffocating-stopped
-  label: "Player stopped suffocating"
-  tags: [player, atmosphere, suffocation]
-  starts-with: "[Notice] <[STAMINA] Player stopped suffocating> Player[{player}] Details:"
-  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+- id: entity-spawn-batch-warning
+  label: Entity Spawn Batch Warning
+  tags: [entity, spawn, batch, warning, streaming]
+  template: |
+    Warning in EntitySpawnBatch {batch_name} {path} 
+     Size:[{size}] State:[state: {state}] FromObjectContainer:[{from_object_container}] 
+     LocalBatch:[{local_batch}] ContainsObjectContainers:[{contains_oc}] ContainsUnstreamables:[{contains_unstreamables}] IsChildBatch:[{is_child}]
 
-- id: player-depressurization-started
-  label: "Player started depressurization"
-  tags: [player, atmosphere, depressurization]
-  starts-with: "[Notice] <[STAMINA] Player started depressurization> Player[{player}] Details:"
-  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+- id: cpu-particle-limit-reached
+  label: CPU Particle Limit Reached
+  tags: [particle, cpu, error, vfx, limit]
+  template: |
+    [Error] <CPU Particle Limit reached> Reached particle limit '{actual}' which exceeds the limit of '{max}'. Will reject the addition of any new particles
+    Effect: '{effect}' 
 
-- id: player-depressurization-stopped
-  label: "Player stopped depressurization"
-  tags: [player, atmosphere, depressurization]
-  starts-with: "[Notice] <[STAMINA] Player stopped depressurization> Player[{player}] Details:"
-  ends-with: "[Team_ActorFeatures][Actor][Roomsystem]"
+- id: debug-fake-hit
+  label: Debug Hostility Fake Hit
+  tags: [combat, debug, fake-hit, hostility, mission]
+  template: "[Notice] <Debug Hostility Events> [OnHandleHit] Fake hit FROM {attacker} TO {target}. Being sent to child {recipient}"
+
+- id: vehicle-destruction
+  label: Vehicle Destruction Event
+  tags: [vehicle, destruction, combat, zone, kill]
+  template: "[Notice] <Vehicle Destruction> CVehicle::OnAdvanceDestroyLevel: Vehicle '{vehicle_name}' [{vehicle_id}] in zone '{zone}' [pos x: {x}, y: {y}, z: {z} vel x: {vel_x}, y: {vel_y}, z: {vel_z}] driven by '{driver}' [{driver_id}] advanced from destroy level {destroy_from} to {destroy_to} caused by '{killer}' [{killer_id}] with '{context}'"
+
+- id: actor-death-in-vehicle
+  label: Actor Death (In Vehicle Zone)
+  tags: [actor, death, combat, npc, vehicle, destruction]
+  template: "[Notice] <Actor Death> CActor::Kill: '{actor_name}' [{actor_id}] in zone '{zone}' killed by '{killer}' [{killer_id}] using '{weapon}' [Class {weapon_class}] with damage type '{damage_type}' from direction x: {dir_x}, y: {dir_y}, z: {dir_z}"
+
+- id: ownerless-fuel-controller
+  label: Ownerless Fuel Controller
+  tags: [fuel, vehicle, bug, controller, registration]
+  template: "[Notice] <CSCItemFuelController::RegisterWithExternalSystems::<lambda_1>::operator ()> Ownerless fuel controller created, refuel not possible"
+
+- id: context-establisher-task-finished
+  label: Context Establisher Task Finished
+  tags: [replication, context, streaming, network, loading, persistence]
+  template: "[Notice] <ContextEstablisherTaskFinished> establisher=\"{establisher}\" message=\"{message}\" taskname=\"{task}\" state={state} status=\"{status}\" runningTime={runtime} numRuns={runs} map=\"{map}\" gamerules=\"{gamerules}\" sessionId=\"{session_id}\""
+
+- id: context-establisher-blocked
+  label: Context Establisher Blocked
+  tags: [replication, context, blocked, streaming, loading, persistence]
+  template: "[Notice] <Context Establisher Blocked> establisher=\"{establisher}\" taskname=\"{task}\" state={state} map=\"{map}\" gamerules=\"{gamerules}\" sessionId=\"{session_id}\""
+
+- id: context-establisher-unblocked
+  label: Context Establisher Unblocked
+  tags: [replication, context, unblocked, streaming, loading, persistence]
+  template: "[Notice] <Context Establisher Unblocked> establisher=\"{establisher}\" taskname=\"{task}\" state={state} map=\"{map}\" gamerules=\"{gamerules}\" sessionId=\"{session_id}\""
+
+- id: context-establisher-state-change
+  label: ContextEstablisher Model State Change
+  tags: [replication, context, model, state-change, network, loading, persistence]
+  template: "[Notice] <ContextEstablisher Model Change State> The Model is changing state meaning views must update their model state. oldState={old_state} newState={new_state} localState={local_state} remoteState={remote_state} modelState={model_state} ViewName=\"{view}\" connection={{connection_a}, {connection_b}} node_id={node_id} playerGEID={player_geid} sessionId=\"{session_id}\""
+
+- id: hauling-objective-pickup
+  label: Hauling Objective Pickup Created
+  tags: [mission, hauling, cargo, pickup, objective]
+  template: "[Notice] <CreateHaulingObjectiveHandler> Pick created - [Cient] sourcename: {source_name}, missionId: {mission_id}, locationName: {location_name}, locationHash: {location_hash}, locationSuperGUID: {location_super_guid}, objectiveId: {objective_id}, objectiveTokenDebugName: {token_debug_name}, itemGuid: {item_guid}"
+
+- id: hauling-objective-dropoff
+  label: Hauling Objective Dropoff Created
+  tags: [mission, hauling, cargo, dropoff, objective]
+  template: "[Notice] <CreateHaulingObjectiveHandler> Dropoff created - [Cient] sourcename: {source_name}, missionId: {mission_id}, locationName: {location_name} [{location_id}], locationHash: {location_hash}, locationSuperGUID: {location_super_guid}, objectiveId: {objective_id}, objectiveTokenDebugName: {token_debug_name}"
+
+- id: loading-platform-state-change
+  label: Platform State Changed
+  tags: [platform, elevator, cargo, state, loading, notice]
+  template: "[Notice] <CSCLoadingPlatformManager::OnLoadingPlatformStateChanged> [Loading Platform] Loading Platform Manager [{platform_name}] Platform state changed to {platform_state}"
+
+- id: platform-missing-light-group
+  label: Missing Light Group Reference
+  tags: [platform, elevator, cargo, error, lightgroup]
+  template: "[Error] <CSCLoadingPlatformManager::TransitionLightGroupState> [Loading Platform] Loading Platform Manager [{platform_name}] does not have reference to the light group"
+
+- id: platform-stop-effects
+  label: Stop Effects in Platform State
+  tags: [platform, elevator, cargo, effects, notice]
+  template: "[Notice] <CSCLoadingPlatformManager::StopEffectForAllTags> [Loading Platform] Loading Platform Manager [{platform_name}] stopping effects in current platform state: {platform_state}"
+
+- id: platform-load-entity-references
+  label: Load Entity References for Platform
+  tags: [platform, elevator, cargo, loading, notice]
+  template: "[Notice] <CSCLoadingPlatformManager::LoadEntitiesReference> Loading references for platform manager '{platform_name}' [{platform_id}]"
+
+- id: platform-invalid-superguid
+  label: Invalid SuperGUID in XML
+  tags: [platform, elevator, cargo, xml, error]
+  template: "[Error] <LoadingPlatformUtilities::LoadFromXmlNode> Invalid SuperGUID retrieved from XML node '{xml_node}' with attribute '{attribute_name}' from Object Container '{object_container}' [{object_container_id}] for entity '{platform_name}' [{platform_id}] with source string '{source_string}'"
+
+- id: platform-load-entity-failed
+  label: Load Entity Failed from XML
+  tags: [platform, elevator, cargo, xml, error]
+  template: "[Error] <CSCLoadingPlatformManager::loadEntityFromXML::<lambda_1>::operator ()> Loading Platform Manager: Failed to find entity from XML node '{xml_node}' for manager '{platform_name}' [{platform_id}]"
+
+- id: inventory-request-created
+  label: Inventory Request Created
+  tags: [inventory, request, player, query, notice]
+  template: "[Notice] <InventoryManagement> New request[{request_id}] Player[{player_name}] Type[{request_type}] SourceInventory[{source_inventory}] TargetInventory[{target_inventory}] ItemClass[{item_class}] StoredEntity[{stored_entity}] LocallyDetached[{locally_detached}] LocalAttached[{local_attached}] PendingMoves[{pending_moves}] Caller[{caller}]"
+
+- id: inventory-request-queued
+  label: Inventory Request Queued
+  tags: [inventory, request, player, query, notice]
+  template: "[Notice] <InventoryManagementRequest> Queued Request[{request_id}] Type[{request_type}] for '{player_name}' [{player_id}] Source Inventory[{source_inventory}] Target Inventory[{target_inventory}]. Source[{source}] amount[{source_amount}] rank[{source_rank}]. Target[{target}] amount[{target_amount}] rank[{target_rank}]. Item[{item}] action[{action}]. RequestInProgress[{in_progress}] CurrentProcess[{current_process}]"
+
+- id: inventory-request-processing
+  label: Inventory Request Processing
+  tags: [inventory, request, processing, player, notice]
+  template: "[Notice] <InventoryManagementRequest> Processing Request[{request_id}] Type[{request_type}] for '{player_name}' [{player_id}] Source Inventory[{source_inventory}] Target Inventory[{target_inventory}] CanLockQueue[{can_lock}] DependentRequest[{dependent_request}]"
+
+- id: inventory-capacity-movement
+  label: Inventory Capacity Movement
+  tags: [inventory, capacity, movement, drag, notice]
+  template: "[Notice] <OnDragInventoryItemModifyTarget> Source[{source}] Capacity[{source_capacity}] UsedCapacity[{source_used}] MovedCapacity[{source_moved}] CapacityAfter[{source_after}] CapacityAfterPerc[{source_perc}] | Target[{target}] Capacity[{target_capacity}] UsedCapacity[{target_used}] MovedCapacity[{target_moved}] CapacityAfter[{target_after}] CapacityAfterPerc[{target_perc}]"
+
+- id: player-instance-request
+  label: Request Player Instance Info
+  tags: [player, instance, request, notice]
+  template: "[Notice] <Get player instance info> Request instance info for player {player_id}"
+
+- id: insured-entitlements-received
+  label: Received Player Insured Entitlements
+  tags: [entitlements, ship, insured, asop, player, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipData::<lambda_1>::operator ()> Received {count} player insured entitlements results for player {player_id}"
+
+- id: owned-ships-fetch-start
+  label: Fetching Owned Ships Data
+  tags: [ship, owned, fetch, asop, player, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchOwnedShipsData> Fetching Owned Ship Data of {entitlement_count} entitlements for player {player_id}. ATCId: {atc_id}"
+
+- id: owned-ships-async-query
+  label: Async Query for Owned Ships
+  tags: [ship, async, fetch, query, asop, player, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchOwnedShipsData> AsyncQueryEntitiesByEntitlement for player {player_id}"
+
+- id: owned-ships-query-results
+  label: Async Query Results for Owned Ships
+  tags: [ship, async, fetch, query, result, asop, player, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchOwnedShipsData::<lambda_1>::operator ()> AsyncQueryEntitiesByEntitlement query returned {result_count} results for player {player_id}"
+
+- id: vehicle-fetch-completed
+  label: Vehicle List Fetch Completed
+  tags: [vehicle, fetch, completed, asop, player, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchOwnedShipsData::<lambda_1>::()::<lambda_2>::()::<lambda_1>::operator ()> Fetching vehicle list for player {player_id} completed. Retrieved {vehicle_count} vehicles."
+
+- id: stream-started
+  label: Stream Started Successfully
+  tags: [stream, online, cigtrace, result, notice]
+  template: "[Notice] <Stream started> Result: {result}"
+
+- id: fuel-controller-async-fail
+  label: Fuel Controller Async Query Failed
+  tags: [vehicle, fuel, async, fail, notice]
+  template: "[Notice] <CSCItemFuelController::RegisterWithExternalSystems::<lambda_1>::operator ()> Async query has either no vehicle or no fuel controller, cannot continue"
+
+- id: fuel-controller-no-vehicle
+  label: Fuel Controller No Vehicle
+  tags: [vehicle, fuel, fail, rwes, notice]
+  template: "[Notice] <CSCItemFuelController::RegisterWithExternalSystems> No vehicle for Fuel controller during RWES. This will cause issues."
+
+- id: actor-stall
+  label: Actor Stall Detected
+  tags: [actor, stall, warning, player, notice]
+  template: "[Notice] <Actor stall> Actor stall detected, Player: {player_name}, Type: {stall_type}, Length: {duration}"
+
+- id: cgf-missing-skeleton
+  label: Missing Skeleton Chunk in CGF
+  tags: [cryanimation, cgf, error, skeleton, asset]
+  template: "CryAnimation: CGF did not contain any Skeleton chunk '{asset_path}'"
+
+- id: platform-light-state-change
+  label: Loading Platform Light State Change
+  tags: [platform, light, state, loading, cargo, notice]
+  template: "[Notice] <CSCLoadingPlatformManager::TransitionLightGroupState> [Loading Platform] Loading Platform Manager [{platform_manager}] transitioning light state in current platform state: {platform_state}"
+
+- id: platform-manager-found-platform
+  label: Platform Manager Found Loading Platform
+  tags: [platform, loading, manager, cargo, notice]
+  template: "[Notice] <CSCLoadingPlatformManager::LoadEntitiesReference::<lambda_1>::operator ()> Platform manager '{platform_manager}' [{platform_manager_id}] found loading platform '{platform_name}' [{platform_id}]"
+
+- id: landing-door-no-atc
+  label: Landing Area Door Event (No ATC)
+  tags: [landing, atc, door, state, mission, notice]
+  template: "[Notice] <CLandingArea::OnDoorOpenStateChanged> [LandingArea] {landing_area} [{landing_area_id}] - No available ATC owner in OnDoorOpenStateChanged - Door: {door_name} [{door_id}], State: {door_state}"
+
+- id: missing-interaction-point-general
+  label: Missing Interaction Point Params (General)
+  tags: [interaction, missing, error, dataforge]
+  template: "[Error] <Missing Interaction Point Params> Interaction Point Params for state are null inside [{object_name}]. check DataForge setup"
+
+- id: missing-interaction-point-inactive
+  label: Missing Interaction Point Params (Specific - Inactive)
+  tags: [interaction, missing, error, dataforge, state]
+  template: "[Error] <Missing Interaction Point Params> Interaction Point Params for state [Inactive] are null inside [{object_name}]. check DataForge setup"
+
+- id: missing-interaction-point-lie
+  label: Missing Interaction Point Params (Specific - Lie)
+  tags: [interaction, missing, error, dataforge, state]
+  template: "[Error] <Missing Interaction Point Params> Interaction Point Params for state [Lie] are null inside [{object_name}]. check DataForge setup"
+
+- id: player-started-suffocating
+  label: Player Started Suffocating
+  tags: [stamina, suffocation, atmosphere, player, actor, multiline]
+  template: |
+    [Notice] <[STAMINA] Player started suffocating> Player[{player}] Details:
+    [STAMINA] RoomStack for Occupant: {breathing_helper}
+    {room_stack}
+    [STAMINA] Current Atmosphere Room {current_room}
+    [STAMINA] Current Atmosphere Pressure: {pressure}, GasSaturation: {gas_saturation}
+    [STAMINA] Current Atmosphere Composition:
+    {atmosphere_composition}
+    [STAMINA] Player position atmosphere: {position_room}
+    [STAMINA] Distance between player and breathing helper: {distance}
+    [STAMINA] Not Wearing Helmet
+    [STAMINA] Time since revive: {time_since_revive}
+    [Team_ActorFeatures][Actor][Roomsystem]
+
+- id: player-started-depressurization
+  label: Player Started Depressurization
+  tags: [stamina, depressurization, atmosphere, player, actor, multiline]
+  template: |
+    [Notice] <[STAMINA] Player started depressurization> Player[{player}] Details:
+    [STAMINA] RoomStack for Occupant: {breathing_helper}
+    {room_stack}
+    [STAMINA] Current Atmosphere Room {current_room}
+    [STAMINA] Current Atmosphere Pressure: {pressure}, GasSaturation: {gas_saturation}
+    [STAMINA] Current Atmosphere Composition:
+    {atmosphere_composition}
+    [STAMINA] Player position atmosphere: {position_room}
+    [STAMINA] Distance between player and breathing helper: {distance}
+    [STAMINA] Not Wearing Helmet
+    [STAMINA] Time since revive: {time_since_revive}
+    [Team_ActorFeatures][Actor][Roomsystem]
+
+- id: player-stopped-suffocating
+  label: Player Stopped Suffocating
+  tags: [stamina, suffocation, atmosphere, player, actor, multiline]
+  template: |
+    [Notice] <[STAMINA] Player stopped suffocating> Player[{player}] Details:
+    [STAMINA] RoomStack for Occupant: {breathing_helper}
+    {room_stack}
+    [STAMINA] Current Atmosphere Room {current_room}
+    [STAMINA] Current Atmosphere Pressure: {pressure}, GasSaturation: {gas_saturation}
+    [STAMINA] Current Atmosphere Composition:
+    {atmosphere_composition}
+    [STAMINA] Player position atmosphere: {position_room}
+    [STAMINA] Distance between player and breathing helper: {distance}
+    [STAMINA] Not Wearing Helmet
+    [STAMINA] Time since revive: {time_since_revive}
+    [Team_ActorFeatures][Actor][Roomsystem]
+
+- id: player-stopped-depressurization
+  label: Player Stopped Depressurization
+  tags: [stamina, depressurization, atmosphere, player, actor, multiline]
+  template: |
+    [Notice] <[STAMINA] Player stopped depressurization> Player[{player}] Details:
+    [STAMINA] RoomStack for Occupant: {breathing_helper}
+    {room_stack}
+    [STAMINA] Current Atmosphere Room {current_room}
+    [STAMINA] Current Atmosphere Pressure: {pressure}, GasSaturation: {gas_saturation}
+    [STAMINA] Current Atmosphere Composition:
+    {atmosphere_composition}
+    [STAMINA] Player position atmosphere: {position_room}
+    [STAMINA] Distance between player and breathing helper: {distance}
+    [STAMINA] Not Wearing Helmet
+    [STAMINA] Time since revive: {time_since_revive}
+    [Team_ActorFeatures][Actor][Roomsystem]
+
+- id: unstow-finalized
+  label: Unstow Request Finalized
+  tags: [inventory, unstow, spawn, notice]
+  template: "[Notice] <UnstowPendingEntities> Unstow Request[{request_id}] for '{player}' [{player_id}] finalized spawn of '{item_name}' [{item_id}], {remaining} remaining"
+
+- id: attachment-received
+  label: Attachment Received
+  tags: [inventory, attachment, player, notice]
+  template: "[Notice] <AttachmentReceived> Player[{player}] Attachment[{attachment_name}, {attachment_class}, {attachment_id}] Status[{status}] Port[{port}] Elapsed[{elapsed}]"
+
+- id: inventory-request-queued
+  label: Inventory Request Queued
+  tags: [inventory, request, queue, notice]
+  template: "[Notice] <InventoryManagementRequest> Attempting queuing of Request[{request_id}] Type[{request_type}] for '{player}' [{player_id}]."
+
+- id: request-inventory-sent
+  label: Inventory Request Sent
+  tags: [inventory, request, sent, notice]
+  template: "[Notice] <RequestInventory> Inventory data Request[{request_id}] sent for Player[{player}]"
+
+- id: request-inventory-issued
+  label: Inventory Request Issued
+  tags: [inventory, request, issue, notice]
+  template: "[Notice] <RequestInventory> Request[{request_id}] Inventory[{inventory_id}]"
+
+- id: query-inventory-elapsed
+  label: Query Inventory Elapsed
+  tags: [inventory, query, elapsed, notice]
+  template: "[Notice] <QueryInventory> Elapsed[{elapsed}] for IInventoryAPI::AsyncQueryInventory."
+
+- id: inventory-token-requested
+  label: Inventory Access Token Requested
+  tags: [inventory, token, access, request, notice]
+  template: "[Notice] <Inventory Token Flow> Requesting access token for User[{player}, {player_id}] on Inventory[{inventory_name}, {inventory_id}]"
+
+- id: inventory-token-relinquished
+  label: Inventory Access Token Relinquished
+  tags: [inventory, token, access, relinquish, notice]
+  template: "[Notice] <Inventory Token Flow> Relinquishing access token[granted: {granted}] for User[{player_id}] on Entity[{entity_name}, {entity_id}] with Inventory[{inventory}]"
+
+- id: inventory-management-result
+  label: Inventory Management Result
+  tags: [inventory, request, result, notice]
+  template: "[Notice] <InventoryManagement> Request[{request_id}] for '{player}' [{player_id}] Result[{result}] Item[{item_count}] CanLockQueue[{can_lock}]"
+
+- id: inventory-management-data
+  label: Inventory Data Page Info
+  tags: [inventory, data, pagination, notice]
+  template: "[Notice] <InventoryManagement> Player[{player}] InventoryDataRequest Successful Inventory[{inventory_id}] Elapsed[{elapsed}]. Page info: HasPreviousPage[{has_prev}], HasNextPage[{has_next}], StartCursor[{start_cursor}], EndCursor[{end_cursor}]."
+
+- id: inventory-end-page-entity
+  label: Inventory End Page Entity
+  tags: [inventory, item, rank, endpage, notice]
+  template: "[Notice] <InventoryManagement> End Page Entity Class[{item_class}] Rank[{item_rank}] SourceInventory[{inventory_id}]"
+
+- id: equip-item
+  label: Equip Item Request
+  tags: [inventory, equip, item, port, notice]
+  template: "[Notice] <EquipItem> Request[{request_id}] equip from Inventory[{inventory_id}] Class[{item_class}] Rank[{item_rank}] Port[{port}] DependentRequest[{dependent_request}] PostAction[{post_action}]"
+
+- id: transit-carriage-start
+  label: Transit Carriage Started Transit
+  tags: [transit, carriage, movement, start, zone, notice]
+  template: "[Notice] <TransitCarriageStartTransit> [TRANSITDEBUG] [TRANSIT CARRIAGE] [ECarriageGeneral] : Carriage {carriage_number} (Id: {carriage_id}) for manager {manager_name} starting transit in zone {zone_name} at position x: {x}, y: {y}, z: {z}"
+
+- id: zone-child-move
+  label: Zone Child Moved to Unblock Parent
+  tags: [zone, objectcontainer, entity, net]
+  template: "[net][bind]CEntity::OnOwnerRemoved: moving zone hosted child id = {child_id} name = \"{child_name}\" to unblock removal of parent id = {parent_id} name = \"{parent_name}\" into zone host id = {zone_id} name = \"{zone_name}\""
+
+- id: vehicle-control-request
+  label: Vehicle Control Token Requested
+  tags: [vehicle, control, request, player, notice]
+  template: "[Notice] <Vehicle Control Flow> CVehicleMovementBase::SetDriver: Local client node [{player_id}] requesting control token for '{vehicle_name}' [{vehicle_id}]"
+
+- id: vehicle-control-granted
+  label: Vehicle Control Token Granted
+  tags: [vehicle, control, granted, player, notice]
+  template: "[Notice] <Vehicle Control Flow> CVehicle::Initialize::<lambda_1>::operator (): Local client node [{player_id}] granted control token for '{vehicle_name}' [{vehicle_id}]"
+
+- id: authority-gained
+  label: Entity Authority Gained
+  tags: [authority, zone, entity, vehicle, jumpdrive, notice]
+  template: "[Notice] <Authority Changed> Gained authority | {cluster} | AUTH | {system} | {object_name} [{entity_id}] ({owner_info}) | {component_path}"
+
+- id: jumpdrive-state-changed
+  label: Jump Drive State Changed
+  tags: [jumpdrive, state, vehicle, notice]
+  template: "[Notice] <Jump Drive State Changed> Now {jump_state} | {cluster} | AUTH | {system} | {object_name} [{entity_id}] ({owner_info}) | {component_path}"
+
+- id: vehicle-control-released
+  label: Vehicle Control Token Released
+  tags: [vehicle, control, release, player, notice]
+  template: "[Notice] <Vehicle Control Flow> CVehicleMovementBase::ClearDriver: Local client node [{player_id}] releasing control token for '{vehicle_name}' [{vehicle_id}]"
+
+- id: jumpdrive-requested-state-change
+  label: Jump Drive Requested State Change
+  tags: [jumpdrive, request, statechange, notice]
+  template: "[Notice] <Jump Drive Requesting State Change> Requested change from {state_from} to {state_to}, reason: {reason} | {cluster} | {auth_status} | {system} | {object_name} [{entity_id}] ({owner_info}) | {component_path}"
+
+- id: jumpdrive-request-failed
+  label: Jump Drive Request Failed
+  tags: [jumpdrive, failure, request, notice]
+  template: "[Notice] <Request Jump Failed> {reason} | {cluster} | {auth_status} | {system} | {object_name} [{entity_id}] ({owner_info}) | {component_path}"
+
+- id: fetch-ship-list-local
+  label: Fetch Ship List for Local Client
+  tags: [asop, shiplist, local, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipData> Fetching ship list for local client"
+
+- id: fetch-player-entitlements
+  label: Fetch Player Insured Entitlements
+  tags: [asop, entitlements, ship, player, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipData> Getting player insured entitlements for player {player_id}"
+
+- id: fetch-ship-extra-data
+  label: Fetch Ship Extra Data
+  tags: [asop, ship, vehicle, extra, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipExtraData> Fetchin Ship Extra Data of {vehicle_count} vehicles for player {player_id}"
+
+- id: fetch-ship-query-eds
+  label: Query EDS for Destroyed State
+  tags: [asop, eds, vehicle, ship, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipExtraData> Querying EDS for destroyed state of the vehicles of player {player_id}"
+
+- id: fetch-ship-received-states
+  label: Received Vehicle States
+  tags: [asop, vehicle, state, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipExtraData::<lambda_1>::operator ()> Received vehicle states for player {player_id}"
+
+- id: fetch-vehicle-list-completed
+  label: Vehicle List Fetch Completed
+  tags: [asop, vehicle, fetch, completed, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchShipExtraData::<lambda_1>::()::<lambda_2>::operator ()> Fetching vehicle list for player {player_id} completed. Retrieved {vehicle_count} vehicules."
+
+- id: hangar-query-results
+  label: Hangar Query Results
+  tags: [asop, hangar, shiplist, results, notice]
+  template: "[Notice] <CEntityComponentShipListProvider::FetchOwnedShipsData::<lambda_1>::()::<lambda_2>::()::<lambda_2>::operator ()> Hangar query returned {result_count} results for player {player_id}"
+
+- id: carryable-bad-state-no-correction
+  label: Carryable Item in Bad State (No Correction)
+  tags: [carryable, itemport, state, error]
+  template: "[Error] <[Carryable]> [Carryable][CEntityComponentCarryable::MoveToCorrectState] {item_name} [{item_id}] was incorrectly in the {bad_state} state, but was unable to get the correct state from the itemport."
+
+- id: carryable-bad-state-corrected
+  label: Carryable Item in Bad State (Corrected)
+  tags: [carryable, itemport, state, error, corrected]
+  template: "[Error] <[Carryable]> [Carryable][CEntityComponentCarryable::MoveToCorrectState] {item_name} [{item_id}] was incorrectly in the {bad_state} state when it should have been in the {expected_state} state, this has been corrected and the new current state is {new_state}."
+
+- id: group-cache-update-start
+  label: Group Cache Update Started
+  tags: [group, cache, social, start, notice]
+  template: "[Notice] <Update group cache> Start"
+
+- id: group-cache-update-success
+  label: Group Cache Update Successful
+  tags: [group, cache, social, success, notice]
+  template: "[Notice] <Update group cache> Success"
+
+- id: atc-tube-animations-complete
+  label: ATC Tube All Animations Complete
+  tags: [atc, docking, tube, animation, state, notice]
+  template: "[Notice] <CSCItemDockingTube::OnAllAnimationsComplete> {manager_name} [{manager_id}] - [PROC]{tube_name} [{tube_id}] - OnAllAnimationsComplete - state {tube_state}"
+
+- id: store-item
+  label: Store Item Request
+  tags: [inventory, store, item, player, notice]
+  template: "[Notice] <StoreItem> Request[{request_id}] store '{item_name}' [{item_id}] by '{player}' [{player_id}] To Inventory[{inventory_id}] Class[{item_class}] Rank[{item_rank}] ItemsCount[{item_count}]"
+
+- id: disconnect-channel
+  label: Channel Disconnected
+  tags: [network, disconnect, player, channel, notice]
+  template: "[Notice] <Channel Disconnected> cause={cause} reason=\"{reason}\" frame={frame} isRemote={is_remote} map=\"{map}\" gamerules=\"{gamerules}\" hostType=\"{host_type}\" remoteAddr={remote_addr} localAddr={local_addr} connection={connection} session={session} node_id={node_id} nickname=\"{nickname}\" playerGEID={player_id} uptime_secs={uptime}"
+
+- id: disconnect-processed
+  label: Channel Processed Disconnection
+  tags: [network, disconnect, player, channel, notice]
+  template: "[Notice] <Channel Process Disconnection> cause={cause} reason=\"{reason}\" frame={frame} isRemote={is_remote} map=\"{map}\" gamerules=\"{gamerules}\" hostType=\"{host_type}\" remoteAddr={remote_addr} localAddr={local_addr} connection={connection} session={session} node_id={node_id} nickname=\"{nickname}\" playerGEID={player_id} uptime_secs={uptime}"
+
+- id: session-end
+  label: Anti-Cheat Session End
+  tags: [session, end, eac, anticheat, notice]
+  template: "[Notice] <CDisciplineServiceExternal::EndSession> Ending session"
+
+- id: begin-async-reset
+  label: Begin Async Reset
+  tags: [entitysystem, reset, async, notice]
+  template: "[Notice] <BeginAsyncReset> CEntitySystem::BeginAsyncReset called! Set m_bResetting = true"
+
+- id: remove-all-entities
+  label: Remove All Entities
+  tags: [entitysystem, remove, entities, notice]
+  template: "[Notice] <RemoveAllEntities> CEntitySystem::RemoveAllEntities, removed {entity_count} entities!"
+
+- id: reset-end
+  label: Reset Completed
+  tags: [entitysystem, reset, end, notice]
+  template: "[Notice] <ResetEnd> CEntitySystem::UpdateReset - Ending Reset!"
+
+- id: stream-out-party-marker
+  label: Streaming Out Party Marker
+  tags: [party, marker, stream, social, notice]
+  template: "[Notice] <CPartyMarkerComponent UFES> Streaming out party marker id {marker_id}. TrackedEntityId: {entity_id}"
+
+- id: gamemode-destroyed
+  label: Game Mode Destroyed
+  tags: [gamerules, end, mode, notice]
+  template: "[Notice] <[GameRules] GameRulesActionEvent_GameModeDestroyed> [GameRules][CGameRules::OnActionEvent] Game mode destroyed"
+
+- id: context-send-state-change
+  label: Context State Change Sent
+  tags: [context, replication, statechange, network, send, notice]
+  template: |
+    [Notice] <ContextEstablisher Send State Change> Sending state change to remote host. oldState={old_state} newState={new_state} localState={local_state} remoteState={remote_state} modelState={model_state} ViewName="{view_name}" connection={connection} node_id={node_id} playerGEID={player_id} sessionId="{session_id}"
+
+- id: context-delivery-result
+  label: Context State Change Delivery Result
+  tags: [context, replication, delivery, statechange, network, notice]
+  template: "[Notice] <ContextEstablisher State Change Delivery Result> Received a delivery notification for a remote state change. delivered={delivered} oldState={old_state} newState={new_state} localState={local_state} remoteState={remote_state} modelState={model_state} ViewName=\"{view_name}\" connection={connection} node_id={node_id} playerGEID={player_id} sessionId=\"{session_id}\""
+
+- id: context-remote-change-success
+  label: Context Remote State Change Success
+  tags: [context, replication, remote, statechange, network, receive, notice]
+  template: "[Notice] <ContextEstablisher Remote Change State Success> Remote host changed state. newState={new_state} localState={local_state} remoteState={remote_state} modelState={model_state}ViewName=\"{view_name}\" connection={connection} node_id={node_id} playerGEID={player_id} sessionId=\"{session_id}\""
+
+- id: janus-plugin-error
+  label: Janus Plugin Error (No Room)
+  tags: [webrtc, janus, error, social, notice]
+  template: "[Notice] <WebRTC/Janus> Janus plugin error: ({error_code}) {error_message}"
+
+- id: spawn-blooper-invalid
+  label: Spawn Blooper - Invalid Spawn Location
+  tags: [spawn, blooper, invalid, collision, physics, notice]
+  template: "[Notice] <CPhysicalEntity::VerifySpawnPos> SPAWN BLOOPER: INVALID SPAWN LOCATION FOR [{spawn_entity}], reason: [{reason}]"
+
+- id: spawn-blooper-invalid-raw
+  label: Spawn Blooper - Invalid Spawn Location (Unstructured)
+  tags: [spawn, blooper, invalid, collision, physics]
+  template: "SPAWN BLOOPER: INVALID SPAWN LOCATION FOR {spawn_entity}, reason: {reason}"
+
+- id: spawn-blooper-patched
+  label: Spawn Blooper - Patched Spawn Location
+  tags: [spawn, blooper, patched, location, physics, notice]
+  template: "[Notice] <CPhysicalEntity::VerifySpawnPos> SPAWN BLOOPER: PATCHED SPAWN LOCATION FOR [{spawn_entity}] from [{pos_from}] to [{pos_to}]"
+
+- id: spawn-bad-position
+  label: Bad Spawn Position Detected
+  tags: [spawn, position, deep, penetration, entity, notice]
+  template: "[Notice] <Bad Spawn Position> The specified bad spawn position: X:{x}, Y:{y}, Z:{z} is in deep penetration for entity {entity_name}[{entity_id}]."
+
+- id: action-state-reset
+  label: Action State Reset
+  tags: [actor, action, state, reset, inconsistency, notice]
+  template: "[Notice] <Action handler reset action state> Resetting action state due to time inconsistency or non-contiguous data. Player: {player}, Reason: {reason}, Frame start time: {frame_start}, Other time 0: {other_time_0}, Other time 1: {other_time_1}."
+
+- id: mission-location-generate
+  label: Mission Generated Locations
+  tags: [mission, location, generator]
+  template: "[Notice] <GenerateLocationProperty> Generated Locations - variablename: {variable}, locations: {location_pairs} contract: {contract}"
+
+- id: carryable-unsupported-state
+  label: Carryable Item Unsupported State
+  tags: [carryable, itemport, state, error]
+  template: "[Error] <[Carryable]> [Carryable][CEntityComponentCarryable::SetState] {item_name} does not support interaction state {state}; it needs to be added to its DataForge record (unless it should not support this state)."
+
+- id: inventory-management-result-summary
+  label: Inventory Management Result Summary
+  tags: [inventory, request, result, elapsed, notice]
+  template: "[Notice] <InventoryManagement> Request[{request_id}] Player[{player}] Result[{result}] Elapsed[{elapsed}]"
+
+- id: inventory-queued-request
+  label: Inventory Queued Request
+  tags: [inventory, request, queued, notice]
+  template: "[Notice] <InventoryManagementRequest> Queued Request[{request_id}] Type[{request_type}] for '{player}' [{player_id}] Source Inventory[{source_inventory}] Target Inventory[{target_inventory}]. Source[{source_item}] amount[{source_amount}] rank[{source_rank}]. Target[{target_item}] amount[{target_amount}] rank[{target_rank}]. Item[{item}] action[{action}]. RequestInProgress[{in_progress}] CurrentProcess[{current_process}]"
+
+- id: inventory-close-pending
+  label: Inventory Closed with Pending Moves
+  tags: [inventory, pending, close, notice]
+  template: "[Notice] <InventoryManagement> Player[{player}] closing inventory with {pending_count} pending moves [{pending_request_ids}]"
+
+- id: auth-expiration-refresh
+  label: EAC Auth Token Refresh
+  tags: [auth, token, refresh, eac, notice]
+  template: "[Notice] <CDisciplineServiceExternal::OnAuthExpiration> Refreshing auth token"
+
+- id: eac-login-start
+  label: EAC Async Login Start
+  tags: [eac, login, auth, token, notice]
+  template: "[Notice] <EAC Login> Starting async login with token size: {token_size}"

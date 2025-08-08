@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Star Citizen Log Parser", "Star Citizen Log Parser\Star Citizen Log Parser.csproj", "{DF56879B-9666-4F6F-BABD-8BFF1F05C3AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{09987D85-4D68-4D4E-9CD8-2CC454CD51CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{DF56879B-9666-4F6F-BABD-8BFF1F05C3AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF56879B-9666-4F6F-BABD-8BFF1F05C3AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF56879B-9666-4F6F-BABD-8BFF1F05C3AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09987D85-4D68-4D4E-9CD8-2CC454CD51CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09987D85-4D68-4D4E-9CD8-2CC454CD51CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09987D85-4D68-4D4E-9CD8-2CC454CD51CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09987D85-4D68-4D4E-9CD8-2CC454CD51CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

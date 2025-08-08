@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <None Update="Game.log">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="templates.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
